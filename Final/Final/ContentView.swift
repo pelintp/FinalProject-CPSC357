@@ -12,6 +12,7 @@ struct ExpenseCategory: Identifiable, Hashable {
     let id = UUID()
     var name: String
     var color: Color
+    var emoji: String
 }
 
 // Expense Entry Structure
@@ -19,7 +20,7 @@ struct ExpenseEntry: Identifiable {
     let id = UUID()
     var category: ExpenseCategory
     var amount: Double
-    var detail: String? // Optional detail field
+    var detail: String?
 }
 
 // Pie Slice View for Pie Chart
@@ -78,16 +79,16 @@ struct PieChartView: View {
 // Main ContentView
 struct ContentView: View {
     @State private var categories = [
-        ExpenseCategory(name: "Food", color: .green),
-        ExpenseCategory(name: "Transport", color: .blue),
-        ExpenseCategory(name: "Entertainment", color: .red),
-        ExpenseCategory(name: "Utilities", color: .orange), // New Category
-        ExpenseCategory(name: "Health", color: .pink)      // New Category
+        ExpenseCategory(name: "Food", color: .green, emoji: "🍔"),
+        ExpenseCategory(name: "Transport", color: .blue, emoji: "🚗"),
+        ExpenseCategory(name: "Entertainment", color: .red, emoji: "🎬"),
+        ExpenseCategory(name: "Utilities", color: .orange, emoji: "💡"),
+        ExpenseCategory(name: "Health", color: .pink, emoji: "💊")
     ]
     
     @State private var expenses: [ExpenseEntry] = []
     @State private var newExpenseAmount: String = ""
-    @State private var newExpenseDetail: String = "" // State for detail input
+    @State private var newExpenseDetail: String = ""
     @State private var selectedCategoryIndex: Int = 0
 
     var body: some View {
@@ -101,23 +102,23 @@ struct ContentView: View {
                 Form {
                     Picker("Category", selection: $selectedCategoryIndex) {
                         ForEach(0..<categories.count, id: \.self) { index in
-                            Text(self.categories[index].name).tag(index)
+                            Text("\(self.categories[index].emoji) \(self.categories[index].name)").tag(index)
                         }
                     }
                     TextField("Amount", text: $newExpenseAmount)
                         .keyboardType(.decimalPad)
-                    TextField("Detail (Optional)", text: $newExpenseDetail) // New detail input field
+                    TextField("Detail (Optional)", text: $newExpenseDetail)
                     Button("Add Expense") {
                         addExpense()
                     }
                 }
 
-                // List of Expenses
+                // Scrollable List of Expenses
                 List {
                     ForEach(expenses) { expense in
                         VStack(alignment: .leading) {
                             HStack {
-                                Text(expense.category.name)
+                                Text("\(expense.category.emoji) \(expense.category.name)")
                                     .foregroundColor(expense.category.color)
                                 Spacer()
                                 Text("$\(expense.amount, specifier: "%.2f")")
@@ -145,7 +146,7 @@ struct ContentView: View {
             let newExpense = ExpenseEntry(category: category, amount: amount, detail: newExpenseDetail.isEmpty ? nil : newExpenseDetail)
             expenses.append(newExpense)
             newExpenseAmount = ""
-            newExpenseDetail = "" // Resetting the detail field
+            newExpenseDetail = ""
         }
     }
 }
