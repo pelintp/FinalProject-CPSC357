@@ -79,11 +79,12 @@ struct PieChartView: View {
 // Main ContentView
 struct ContentView: View {
     @State private var categories = [
-        ExpenseCategory(name: "Food", color: .green, emoji: "🍔"),
+        ExpenseCategory(name: "Food", color: .yellow, emoji: "🍔"),
         ExpenseCategory(name: "Transport", color: .blue, emoji: "🚗"),
         ExpenseCategory(name: "Entertainment", color: .red, emoji: "🎬"),
-        ExpenseCategory(name: "Utilities", color: .orange, emoji: "💡"),
-        ExpenseCategory(name: "Health", color: .pink, emoji: "💊")
+        ExpenseCategory(name: "Utilities", color: .green, emoji: "💡"),
+        ExpenseCategory(name: "Shopping", color: Color.pink.opacity(0.3), emoji: "🛍️"),
+        ExpenseCategory(name: "Health", color: .brown, emoji: "💊")
     ]
     
     @State private var expenses: [ExpenseEntry] = []
