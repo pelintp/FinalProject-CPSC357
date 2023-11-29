@@ -23,7 +23,7 @@ struct ExpenseEntry: Identifiable {
     var detail: String?
 }
 
-// Pie Slice View for Pie Chart
+// Pie Slice View
 struct PieSliceView: View {
     var startAngle: Angle
     var endAngle: Angle
@@ -33,10 +33,8 @@ struct PieSliceView: View {
         GeometryReader { geometry in
             Path { path in
                 let width: CGFloat = min(geometry.size.width, geometry.size.height)
-                let height = width
-
-                let center = CGPoint(x: width * 0.5, y: height * 0.5)
-                let radius = width * 0.5
+                let center = CGPoint(x: width / 2, y: width / 2)
+                let radius = width / 2
 
                 path.move(to: center)
                 path.addArc(center: center, radius: radius, startAngle: startAngle, endAngle: endAngle, clockwise: false)
@@ -53,12 +51,12 @@ struct PieChartView: View {
 
     private var slices: [PieSliceView] {
         var slices = [PieSliceView]()
-        let totalAmount = expenses.reduce(0) { $0 + $1.amount }
+        let total = expenses.reduce(0) { $0 + $1.amount }
         var startAngle = Angle(degrees: 0)
 
         for expense in expenses {
-            let normalizedAmount = (expense.amount / totalAmount)
-            let endAngle = startAngle + Angle(degrees: normalizedAmount * 360)
+            let normalized = expense.amount / total
+            let endAngle = startAngle + Angle(degrees: normalized * 360)
             slices.append(PieSliceView(startAngle: startAngle, endAngle: endAngle, color: expense.category.color))
             startAngle = endAngle
         }
@@ -68,92 +66,107 @@ struct PieChartView: View {
 
     var body: some View {
         ZStack {
-            ForEach(0..<slices.count, id: \.self) { index in
-                self.slices[index]
+            ForEach(slices.indices, id: \.self) { index in
+                slices[index]
             }
         }
         .aspectRatio(1, contentMode: .fit)
     }
 }
 
-// Main ContentView
+// Main View
 struct ContentView: View {
-    @State private var categories = [
-        ExpenseCategory(name: "Food", color: .yellow, emoji: "🍔"),
-        ExpenseCategory(name: "Transport", color: .blue, emoji: "🚗"),
-        ExpenseCategory(name: "Entertainment", color: .red, emoji: "🎬"),
-        ExpenseCategory(name: "Utilities", color: .green, emoji: "💡"),
-        ExpenseCategory(name: "Shopping", color: Color.pink.opacity(0.3), emoji: "🛍️"),
-        ExpenseCategory(name: "Health", color: .brown, emoji: "💊")
-    ]
-    
+    @Environment(\.colorScheme) var colorScheme
+    @State private var categories: [ExpenseCategory]
     @State private var expenses: [ExpenseEntry] = []
-    @State private var newExpenseAmount: String = ""
-    @State private var newExpenseDetail: String = ""
-    @State private var selectedCategoryIndex: Int = 0
+    @State private var newAmount: String = ""
+    @State private var newDetail: String = ""
+    @State private var selectedIndex: Int = 0
+    @State private var showSettings = false
+
+    public init(categories: [ExpenseCategory]) {
+        self._categories = State(initialValue: categories)
+    }
 
     var body: some View {
         NavigationView {
             VStack {
-                // Pie Chart
                 PieChartView(expenses: expenses)
                     .padding()
-                
-                // Expense Input Form
+
                 Form {
-                    Picker("Category", selection: $selectedCategoryIndex) {
-                        ForEach(0..<categories.count, id: \.self) { index in
-                            Text("\(self.categories[index].emoji) \(self.categories[index].name)").tag(index)
+                    Picker("Category", selection: $selectedIndex) {
+                        ForEach(categories.indices, id: \.self) { index in
+                            Text("\(categories[index].emoji) \(categories[index].name)")
                         }
                     }
-                    TextField("Amount", text: $newExpenseAmount)
+                    TextField("Amount", text: $newAmount)
                         .keyboardType(.decimalPad)
-                    TextField("Detail (Optional)", text: $newExpenseDetail)
-                    Button("Add Expense") {
-                        addExpense()
-                    }
+                    TextField("Detail", text: $newDetail)
+                    Button("Add Expense") { addExpense() }
                 }
 
-                // Scrollable List of Expenses
-                List {
-                    ForEach(expenses) { expense in
-                        VStack(alignment: .leading) {
-                            HStack {
-                                Text("\(expense.category.emoji) \(expense.category.name)")
-                                    .foregroundColor(expense.category.color)
-                                Spacer()
-                                Text("$\(expense.amount, specifier: "%.2f")")
-                            }
-                            if let detail = expense.detail, !detail.isEmpty {
-                                Text(detail)
-                                    .font(.subheadline)
-                                    .foregroundColor(.gray)
-                            }
+                List(expenses) { expense in
+                    VStack(alignment: .leading) {
+                        HStack {
+                            Text("\(expense.category.emoji) \(expense.category.name)")
+                                .foregroundColor(expense.category.color)
+                            Spacer()
+                            Text("$\(expense.amount, specifier: "%.2f")")
                         }
-                        .padding()
-                        .background(expense.category.color.opacity(0.1))
-                        .cornerRadius(10)
+                        if let detail = expense.detail {
+                            Text(detail).font(.subheadline).foregroundColor(.gray)
+                        }
                     }
+                    .padding()
+                    .background(expense.category.color.opacity(0.1))
+                    .cornerRadius(10)
                 }
             }
             .navigationTitle("Expenses")
+            .toolbar {
+                Button(action: { showSettings = true }) {
+                    Image(systemName: "gear")
+                }
+            }
+            .sheet(isPresented: $showSettings) {
+                SettingsView()
+            }
         }
     }
-    
-    // Function to Add a New Expense
+
     private func addExpense() {
-        let category = categories[selectedCategoryIndex]
-        if let amount = Double(newExpenseAmount) {
-            let newExpense = ExpenseEntry(category: category, amount: amount, detail: newExpenseDetail.isEmpty ? nil : newExpenseDetail)
+        let category = categories[selectedIndex]
+        if let amount = Double(newAmount) {
+            let newExpense = ExpenseEntry(category: category, amount: amount, detail: newDetail.isEmpty ? nil : newDetail)
             expenses.append(newExpense)
-            newExpenseAmount = ""
-            newExpenseDetail = ""
+            newAmount = ""
+            newDetail = ""
         }
     }
 }
 
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView()
+// Settings View
+struct SettingsView: View {
+    @Environment(\.colorScheme) var colorScheme
+    @Environment(\.presentationMode) var presentationMode
+
+    var body: some View {
+        NavigationView {
+            Form {
+                Section(header: Text("Appearance")) {
+                    Toggle("Dark Mode", isOn: Binding(
+                        get: { colorScheme == .dark },
+                        set: { _ in /* Toggle Dark Mode Here */ }
+                    ))
+                }
+            }
+            .navigationTitle("Settings")
+            .navigationBarItems(trailing: Button("Done") {
+                presentationMode.wrappedValue.dismiss()
+            })
+        }
     }
 }
+
+
