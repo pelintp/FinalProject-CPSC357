@@ -12,12 +12,12 @@ struct FinalApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView(categories: [
-                ExpenseCategory(name: "Food", color: .yellow, emoji: "🍔"),
-                ExpenseCategory(name: "Transport", color: .blue, emoji: "🚗"),
-                ExpenseCategory(name: "Entertainment", color: .red, emoji: "🎬"),
-                ExpenseCategory(name: "Utilities", color: .green, emoji: "💡"),
-                ExpenseCategory(name: "Shopping", color: .pink.opacity(0.3), emoji: "🛍️"),
-                ExpenseCategory(name: "Health", color: .brown, emoji: "💊")
+                ExpenseCategory(name: "Food", color: .yellow),
+                ExpenseCategory(name: "Transport", color: .blue),
+                ExpenseCategory(name: "Entertainment", color: .red),
+                ExpenseCategory(name: "Utilities", color: .green),
+                ExpenseCategory(name: "Shopping", color: .pink.opacity(0.3)),
+                ExpenseCategory(name: "Health", color: .brown)
                 // Add other categories as needed
             ])
         }
