@@ -12,7 +12,6 @@ struct ExpenseCategory: Identifiable, Hashable {
     let id = UUID()
     var name: String
     var color: Color
-    var emoji: String
 }
 
 // Expense Entry Structure
@@ -47,6 +46,7 @@ struct PieSliceView: View {
 
 // Pie Chart View
 struct PieChartView: View {
+    @Binding var showSettings: Bool
     var expenses: [ExpenseEntry]
 
     private var slices: [PieSliceView] {
@@ -355,5 +355,3 @@ struct SettingsView: View {
         }
     }
 }
-
-
