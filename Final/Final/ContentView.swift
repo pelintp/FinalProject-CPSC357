@@ -89,80 +89,101 @@ struct ContentView: View {
     @State private var showSettings = false
     @State private var showEditingSheet = false
     @State private var isAddCategoryActive = false
-        @State private var isAddExpenseActive = false
+    @State private var isAddExpenseActive = false
 
-    @State private var categories: [ExpenseCategory]
+    @State private var categories: [ExpenseCategory] = []
 
     public init(categories: [ExpenseCategory]) {
         self._categories = State(initialValue: categories)
     }
 
     var body: some View {
-        NavigationView {
+        TabView {
+            // Category Tab
+            NavigationView {
+                VStack {
+                    CategoryManagementView(categories: $categories, addCategoryClosure: addCategory)
+                }
+                .navigationTitle("Categories")
+            }
+            .tabItem {
+                Label("Categories", systemImage: "list.bullet.rectangle")
+            }
+
+            // Expense Tab
+            NavigationView {
+                VStack {
+                    Form {
+                        Section(header: Text("Expense")) {
+                            Picker("Category", selection: $selectedIndex) {
+                                ForEach(categories.indices, id: \.self) { index in
+                                    Text("\(categories[index].name)")
+                                        .foregroundColor(categories[index].color)
+                                }
+                            }
+                            TextField("Amount", text: $newAmount)
+                                .keyboardType(.decimalPad)
+                            TextField("Detail", text: $newDetail)
+                            Button("Add Expense") { addExpense() }
+                        }
+
+                        Section(header: Text("Expenses")) {
+                            ForEach(expenses) { expense in
+                                VStack(alignment: .leading) {
+                                    HStack {
+                                        VStack(alignment: .leading) {
+                                            Text("\(expense.category.name)")
+                                                .foregroundColor(expense.category.color)
+                                            Text("$\(expense.amount, specifier: "%.2f")")
+                                                .foregroundColor(.secondary)
+                                                .font(.headline)
+                                        }
+
+                                        Spacer()
+
+                                        HStack {
+                                            Button("Edit") {
+                                                editExpense(expense)
+                                            }
+                                            .foregroundColor(.blue)
+
+                                            Button("Delete") {
+                                                deleteExpense(expense)
+                                            }
+                                            .foregroundColor(.red)
+                                        }
+                                    }
+                                    .padding()
+                                    .background(expense.category.color.opacity(0.1))
+                                    .cornerRadius(10)
+                                }
+                            }
+                        }
+                    }
+                }
+                .navigationTitle("Expenses")
+            }
+            .tabItem {
+                Label("Expenses", systemImage: "dollarsign.circle")
+            }
+
+            // Pie Chart Tab
             VStack {
                 PieChartView(showSettings: $showSettings, expenses: expenses)
                     .padding()
-                
-                CategoryManagementView(categories: $categories, addCategoryClosure: addCategory)
-
-                Form {
-                    Section(header: Text("Expense")) {
-                        Picker("Category", selection: $selectedIndex) {
-                            ForEach(categories.indices, id: \.self) { index in
-                                Text("\(categories[index].name)")
-                                    .foregroundColor(categories[index].color)
-                            }
-                        }
-                        TextField("Amount", text: $newAmount)
-                            .keyboardType(.decimalPad)
-                        TextField("Detail", text: $newDetail)
-                        Button("Add Expense") { addExpense() }
-                    }
-
-                    Section(header: Text("Expenses")) {
-                        ForEach(expenses) { expense in
-                            VStack(alignment: .leading) {
-                                HStack {
-                                    VStack(alignment: .leading) {
-                                        Text("\(expense.category.name)")
-                                            .foregroundColor(expense.category.color)
-                                        Text("$\(expense.amount, specifier: "%.2f")")
-                                            .foregroundColor(.secondary)
-                                            .font(.headline)
-                                    }
-
-                                    Spacer()
-
-                                    HStack {
-                                        Button("Edit") {
-                                            editExpense(expense)
-                                        }
-                                        .foregroundColor(.blue)
-
-                                        Button("Delete") {
-                                            deleteExpense(expense)
-                                        }
-                                        .foregroundColor(.red)
-                                    }
-                                }
-                                .padding()
-                                .background(expense.category.color.opacity(0.1))
-                                .cornerRadius(10)
-                            }
-                        }
-                    }
-                }
             }
-            .navigationTitle("Expenses")
-            .toolbar {
-                Button(action: { showSettings = true }) {
-                    Image(systemName: "gear")
-                }
+            .tabItem {
+                Label("Pie Chart", systemImage: "chart.pie.fill")
             }
-            .sheet(isPresented: $showSettings) {
-                withAnimation {
-                    SettingsView()
-                }
+        }
+        .toolbar {
+            Button(action: { showSettings = true }) {
+                Image(systemName: "gear")
+            }
+        }
+        .sheet(isPresented: $showSettings) {
+            withAnimation {
+                SettingsView()
             }
         }
     }
@@ -199,6 +220,12 @@ struct ContentView: View {
         if let index = expenses.firstIndex(where: { $0.id == expense.id }) {
             expenses.remove(at: index)
         }
+    }
+}
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView(categories: [ExpenseCategory(name: "Food", color: .blue), ExpenseCategory(name: "Entertainment", color: .green)])
     }
 }
 
@@ -290,7 +317,6 @@ struct CategoryManagementView: View {
                     }
                 }
             }
-            .navigationTitle("Category Management")
         }
     }
 
