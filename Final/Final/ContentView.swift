@@ -146,6 +146,36 @@ struct ContentView: View {
     }
 }
 
+extension Color {
+    static func fromString(_ name: String) -> Color {
+        switch name.lowercased() {
+        case "red": return .red
+        case "Red": return .red
+        case "green": return .green
+        case "Green": return .green
+        case "blue": return .blue
+        case "Blue": return .blue
+        case "yellow": return .yellow
+        case "Yellow": return .yellow
+        case "orange": return .orange
+        case "Orange": return .orange
+        case "pink": return .pink
+        case "Pink": return .pink
+        case "purple": return .purple
+        case "Purple": return .purple
+        case "brown": return .brown
+        case "Brown": return .brown
+        case "gray": return .gray
+        case "Gray": return .gray
+        case "black": return .black
+        case "Black": return .black
+        case "white": return .white
+        case "White": return .white
+        default: return .clear
+        }
+    }
+}
+
 // Settings View
 struct SettingsView: View {
     @Environment(\.colorScheme) var colorScheme
