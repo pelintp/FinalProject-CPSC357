@@ -82,12 +82,16 @@ struct PieChartView: View {
 // Main View
 struct ContentView: View {
     @Environment(\.colorScheme) var colorScheme
-    @State private var categories: [ExpenseCategory]
     @State private var expenses: [ExpenseEntry] = []
     @State private var newAmount: String = ""
     @State private var newDetail: String = ""
     @State private var selectedIndex: Int = 0
     @State private var showSettings = false
+    @State private var showEditingSheet = false
+    @State private var isAddCategoryActive = false
+        @State private var isAddExpenseActive = false
+
+    @State private var categories: [ExpenseCategory]
 
     public init(categories: [ExpenseCategory]) {
         self._categories = State(initialValue: categories)
@@ -96,36 +100,57 @@ struct ContentView: View {
     var body: some View {
         NavigationView {
             VStack {
-                PieChartView(expenses: expenses)
+                PieChartView(showSettings: $showSettings, expenses: expenses)
                     .padding()
+                
+                CategoryManagementView(categories: $categories, addCategoryClosure: addCategory)
 
                 Form {
-                    Picker("Category", selection: $selectedIndex) {
-                        ForEach(categories.indices, id: \.self) { index in
-                            Text("\(categories[index].emoji) \(categories[index].name)")
+                    Section(header: Text("Expense")) {
+                        Picker("Category", selection: $selectedIndex) {
+                            ForEach(categories.indices, id: \.self) { index in
+                                Text("\(categories[index].name)")
+                                    .foregroundColor(categories[index].color)
+                            }
                         }
+                        TextField("Amount", text: $newAmount)
+                            .keyboardType(.decimalPad)
+                        TextField("Detail", text: $newDetail)
+                        Button("Add Expense") { addExpense() }
                     }
-                    TextField("Amount", text: $newAmount)
-                        .keyboardType(.decimalPad)
-                    TextField("Detail", text: $newDetail)
-                    Button("Add Expense") { addExpense() }
-                }
 
-                List(expenses) { expense in
-                    VStack(alignment: .leading) {
-                        HStack {
-                            Text("\(expense.category.emoji) \(expense.category.name)")
-                                .foregroundColor(expense.category.color)
-                            Spacer()
-                            Text("$\(expense.amount, specifier: "%.2f")")
-                        }
-                        if let detail = expense.detail {
-                            Text(detail).font(.subheadline).foregroundColor(.gray)
+                    Section(header: Text("Expenses")) {
+                        ForEach(expenses) { expense in
+                            VStack(alignment: .leading) {
+                                HStack {
+                                    VStack(alignment: .leading) {
+                                        Text("\(expense.category.name)")
+                                            .foregroundColor(expense.category.color)
+                                        Text("$\(expense.amount, specifier: "%.2f")")
+                                            .foregroundColor(.secondary)
+                                            .font(.headline)
+                                    }
+
+                                    Spacer()
+
+                                    HStack {
+                                        Button("Edit") {
+                                            editExpense(expense)
+                                        }
+                                        .foregroundColor(.blue)
+
+                                        Button("Delete") {
+                                            deleteExpense(expense)
+                                        }
+                                        .foregroundColor(.red)
+                                    }
+                                }
+                                .padding()
+                                .background(expense.category.color.opacity(0.1))
+                                .cornerRadius(10)
+                            }
                         }
                     }
-                    .padding()
-                    .background(expense.category.color.opacity(0.1))
-                    .cornerRadius(10)
                 }
             }
             .navigationTitle("Expenses")
@@ -135,9 +160,16 @@ struct ContentView: View {
                 }
             }
             .sheet(isPresented: $showSettings) {
-                SettingsView()
+                withAnimation {
+                    SettingsView()
+                }
             }
         }
+    }
+
+    private func addCategory(name: String, color: Color) {
+        let newCategory = ExpenseCategory(name: name, color: color)
+        categories.append(newCategory)
     }
 
     private func addExpense() {
@@ -148,6 +180,83 @@ struct ContentView: View {
             newAmount = ""
             newDetail = ""
         }
+    }
+
+    private func editExpense(_ expense: ExpenseEntry) {
+        let editingView = ExpenseEditingView(
+            expense: expense,
+            categories: $categories,
+            onSave: { updatedExpense in
+                if let index = expenses.firstIndex(where: { $0.id == updatedExpense.id }) {
+                    expenses[index] = updatedExpense
+                }
+            }
+        )
+        showEditingSheet.toggle()
+    }
+
+    private func deleteExpense(_ expense: ExpenseEntry) {
+        if let index = expenses.firstIndex(where: { $0.id == expense.id }) {
+            expenses.remove(at: index)
+        }
+    }
+}
+
+
+struct ExpenseEditingView: View {
+    @Environment(\.presentationMode) var presentationMode
+    @Binding var categories: [ExpenseCategory]
+    @State private var updatedAmount: String
+    @State private var updatedDetail: String
+    @State private var selectedCategoryIndex: Int
+
+    let expense: ExpenseEntry
+    let onSave: (ExpenseEntry) -> Void
+
+    init(expense: ExpenseEntry, categories: Binding<[ExpenseCategory]>, onSave: @escaping (ExpenseEntry) -> Void) {
+        self.expense = expense
+        self.onSave = onSave
+        self._categories = categories
+
+        // Initialize state with the existing expense details
+        _updatedAmount = State(initialValue: String(expense.amount))
+        _updatedDetail = State(initialValue: expense.detail ?? "")
+        _selectedCategoryIndex = State(initialValue: categories.wrappedValue.firstIndex(where: { $0.id == expense.category.id }) ?? 0)
+    }
+
+    var body: some View {
+        NavigationView {
+            Form {
+                Picker("Category", selection: $selectedCategoryIndex) {
+                    ForEach(categories.indices, id: \.self) { index in
+                        Text("\(categories[index].name)")
+                    }
+                }
+                TextField("Amount", text: $updatedAmount)
+                    .keyboardType(.decimalPad)
+                TextField("Detail", text: $updatedDetail)
+            }
+            .navigationTitle("Edit Expense")
+            .navigationBarItems(trailing: Button("Save") {
+                saveExpense()
+            })
+        }
+    }
+
+    private func saveExpense() {
+        guard let updatedAmount = Double(updatedAmount) else {
+            // Handle invalid amount input
+            return
+        }
+
+        let updatedExpense = ExpenseEntry(
+            category: categories[selectedCategoryIndex],
+            amount: updatedAmount,
+            detail: updatedDetail.isEmpty ? nil : updatedDetail
+        )
+
+        onSave(updatedExpense)
+        presentationMode.wrappedValue.dismiss()
     }
 }
 
