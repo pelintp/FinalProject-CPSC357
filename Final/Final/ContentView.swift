@@ -71,6 +71,11 @@ struct PieChartView: View {
             }
         }
         .aspectRatio(1, contentMode: .fit)
+        .onTapGesture {
+            withAnimation {
+                showSettings.toggle()
+            }
+        }
     }
 }
 
