@@ -157,7 +157,11 @@ struct SettingsView: View {
                 Section(header: Text("Appearance")) {
                     Toggle("Dark Mode", isOn: Binding(
                         get: { colorScheme == .dark },
-                        set: { _ in /* Toggle Dark Mode Here */ }
+                        set: { isDarkMode in
+                            if let windowScene = UIApplication.shared.connectedScenes.first(where: { $0 is UIWindowScene }) as? UIWindowScene {
+                                windowScene.windows.first?.overrideUserInterfaceStyle = isDarkMode ? .dark : .light
+                            }
+                        }
                     ))
                 }
             }
