@@ -146,6 +146,45 @@ struct ContentView: View {
     }
 }
 
+struct CategoryManagementView: View {
+    @Binding var categories: [ExpenseCategory]
+    @State private var newCategoryName: String = ""
+    @State private var newCategoryColor: String = ""
+    var addCategoryClosure: (String, Color) -> Void
+
+    var body: some View {
+        NavigationView {
+            Form {
+                Section(header: Text("Categories")) {
+                    ForEach(categories) { category in
+                        VStack(alignment: .leading) {
+                            Text("\(category.name)")
+                                .foregroundColor(category.color)
+                        }
+                    }
+                    .onDelete(perform: deleteCategory)
+                }
+
+                Section(header: Text("Add New Category")) {
+                    TextField("Name", text: $newCategoryName)
+                    TextField("Color", text: $newCategoryColor)
+                    Button("Add Category") {
+                        let colorName = Color.fromString(newCategoryColor)
+                        addCategoryClosure(newCategoryName, colorName)
+                        newCategoryName = ""
+                        newCategoryColor = ""
+                    }
+                }
+            }
+            .navigationTitle("Category Management")
+        }
+    }
+
+    private func deleteCategory(at offsets: IndexSet) {
+        categories.remove(atOffsets: offsets)
+    }
+}
+
 extension Color {
     static func fromString(_ name: String) -> Color {
         switch name.lowercased() {
