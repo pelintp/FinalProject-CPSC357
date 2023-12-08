@@ -90,6 +90,7 @@ struct ContentView: View {
     @State private var showEditingSheet = false
     @State private var isAddCategoryActive = false
     @State private var isAddExpenseActive = false
+    @AppStorage("isDarkMode") var isDarkMode: Bool = false
 
     @State private var categories: [ExpenseCategory] = []
 
@@ -175,17 +176,17 @@ struct ContentView: View {
             .tabItem {
                 Label("Pie Chart", systemImage: "chart.pie.fill")
             }
-        }
-        .toolbar {
-            Button(action: { showSettings = true }) {
-                Image(systemName: "gear")
+            
+            // Settings Tab
+            NavigationView {
+                SettingsView(isDarkMode: $isDarkMode)
+                    .navigationTitle("Settings")
+            }
+            .tabItem {
+                Label("Settings", systemImage: "gear")
             }
         }
-        .sheet(isPresented: $showSettings) {
-            withAnimation {
-                SettingsView()
-            }
-        }
+        .preferredColorScheme(isDarkMode ? .dark : .light)
     }
 
     private func addCategory(name: String, color: Color) {
@@ -357,27 +358,15 @@ extension Color {
 
 // Settings View
 struct SettingsView: View {
-    @Environment(\.colorScheme) var colorScheme
+    @Binding var isDarkMode: Bool
     @Environment(\.presentationMode) var presentationMode
 
     var body: some View {
-        NavigationView {
-            Form {
-                Section(header: Text("Appearance")) {
-                    Toggle("Dark Mode", isOn: Binding(
-                        get: { colorScheme == .dark },
-                        set: { isDarkMode in
-                            if let windowScene = UIApplication.shared.connectedScenes.first(where: { $0 is UIWindowScene }) as? UIWindowScene {
-                                windowScene.windows.first?.overrideUserInterfaceStyle = isDarkMode ? .dark : .light
-                            }
-                        }
-                    ))
-                }
+        Form {
+            Section(header: Text("Appearance")) {
+                Toggle("Dark Mode", isOn: $isDarkMode)
             }
-            .navigationTitle("Settings")
-            .navigationBarItems(trailing: Button("Done") {
-                presentationMode.wrappedValue.dismiss()
-            })
         }
+        .navigationTitle("Settings")
     }
 }
