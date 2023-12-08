@@ -60,7 +60,7 @@ struct PieChartView: View {
             slices.append(PieSliceView(startAngle: startAngle, endAngle: endAngle, color: expense.category.color))
             startAngle = endAngle
         }
-        
+
         return slices
     }
 
@@ -87,12 +87,10 @@ struct ContentView: View {
     @State private var newDetail: String = ""
     @State private var selectedIndex: Int = 0
     @State private var showSettings = false
-    @State private var showEditingSheet = false
     @State private var isAddCategoryActive = false
     @State private var isAddExpenseActive = false
-    @AppStorage("isDarkMode") var isDarkMode: Bool = false
-
     @State private var categories: [ExpenseCategory] = []
+    @AppStorage("isDarkMode") var isDarkMode: Bool = false
 
     public init(categories: [ExpenseCategory]) {
         self._categories = State(initialValue: categories)
@@ -143,11 +141,6 @@ struct ContentView: View {
                                         Spacer()
 
                                         HStack {
-                                            Button("Edit") {
-                                                editExpense(expense)
-                                            }
-                                            .foregroundColor(.blue)
-
                                             Button("Delete") {
                                                 deleteExpense(expense)
                                             }
@@ -176,7 +169,7 @@ struct ContentView: View {
             .tabItem {
                 Label("Pie Chart", systemImage: "chart.pie.fill")
             }
-            
+
             // Settings Tab
             NavigationView {
                 SettingsView(isDarkMode: $isDarkMode)
@@ -204,19 +197,6 @@ struct ContentView: View {
         }
     }
 
-    private func editExpense(_ expense: ExpenseEntry) {
-        let editingView = ExpenseEditingView(
-            expense: expense,
-            categories: $categories,
-            onSave: { updatedExpense in
-                if let index = expenses.firstIndex(where: { $0.id == updatedExpense.id }) {
-                    expenses[index] = updatedExpense
-                }
-            }
-        )
-        showEditingSheet.toggle()
-    }
-
     private func deleteExpense(_ expense: ExpenseEntry) {
         if let index = expenses.firstIndex(where: { $0.id == expense.id }) {
             expenses.remove(at: index)
@@ -227,64 +207,6 @@ struct ContentView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView(categories: [ExpenseCategory(name: "Food", color: .blue), ExpenseCategory(name: "Entertainment", color: .green)])
-    }
-}
-
-
-struct ExpenseEditingView: View {
-    @Environment(\.presentationMode) var presentationMode
-    @Binding var categories: [ExpenseCategory]
-    @State private var updatedAmount: String
-    @State private var updatedDetail: String
-    @State private var selectedCategoryIndex: Int
-
-    let expense: ExpenseEntry
-    let onSave: (ExpenseEntry) -> Void
-
-    init(expense: ExpenseEntry, categories: Binding<[ExpenseCategory]>, onSave: @escaping (ExpenseEntry) -> Void) {
-        self.expense = expense
-        self.onSave = onSave
-        self._categories = categories
-
-        // Initialize state with the existing expense details
-        _updatedAmount = State(initialValue: String(expense.amount))
-        _updatedDetail = State(initialValue: expense.detail ?? "")
-        _selectedCategoryIndex = State(initialValue: categories.wrappedValue.firstIndex(where: { $0.id == expense.category.id }) ?? 0)
-    }
-
-    var body: some View {
-        NavigationView {
-            Form {
-                Picker("Category", selection: $selectedCategoryIndex) {
-                    ForEach(categories.indices, id: \.self) { index in
-                        Text("\(categories[index].name)")
-                    }
-                }
-                TextField("Amount", text: $updatedAmount)
-                    .keyboardType(.decimalPad)
-                TextField("Detail", text: $updatedDetail)
-            }
-            .navigationTitle("Edit Expense")
-            .navigationBarItems(trailing: Button("Save") {
-                saveExpense()
-            })
-        }
-    }
-
-    private func saveExpense() {
-        guard let updatedAmount = Double(updatedAmount) else {
-            // Handle invalid amount input
-            return
-        }
-
-        let updatedExpense = ExpenseEntry(
-            category: categories[selectedCategoryIndex],
-            amount: updatedAmount,
-            detail: updatedDetail.isEmpty ? nil : updatedDetail
-        )
-
-        onSave(updatedExpense)
-        presentationMode.wrappedValue.dismiss()
     }
 }
 
@@ -307,7 +229,6 @@ struct CategoryManagementView: View {
                                 .foregroundColor(category.color)
                         }
                     }
-                    .onDelete(perform: deleteCategory)
                 }
 
                 Section(header: Text("Add New Category")) {
@@ -333,41 +254,6 @@ struct CategoryManagementView: View {
                     }
                 }
             }
-        }
-    }
-
-    private func deleteCategory(at offsets: IndexSet) {
-        categories.remove(atOffsets: offsets)
-    }
-}
-
-
-extension Color {
-    static func fromString(_ name: String) -> Color {
-        switch name.lowercased() {
-        case "red": return .red
-        case "Red": return .red
-        case "green": return .green
-        case "Green": return .green
-        case "blue": return .blue
-        case "Blue": return .blue
-        case "yellow": return .yellow
-        case "Yellow": return .yellow
-        case "orange": return .orange
-        case "Orange": return .orange
-        case "pink": return .pink
-        case "Pink": return .pink
-        case "purple": return .purple
-        case "Purple": return .purple
-        case "brown": return .brown
-        case "Brown": return .brown
-        case "gray": return .gray
-        case "Gray": return .gray
-        case "black": return .black
-        case "Black": return .black
-        case "white": return .white
-        case "White": return .white
-        default: return .clear
         }
     }
 }
