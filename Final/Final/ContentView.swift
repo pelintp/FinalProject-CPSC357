@@ -2,11 +2,11 @@
 //  ContentView.swift
 //  Final
 //
-//  Created by pelin on 11/29/23.
-//
 
 import SwiftUI
 
+// Created by pelin
+// Edited and finalized by suparna
 // Expense Category Structure
 struct ExpenseCategory: Identifiable, Hashable {
     let id = UUID()
@@ -14,6 +14,7 @@ struct ExpenseCategory: Identifiable, Hashable {
     var color: Color
 }
 
+// Created by pelin
 // Expense Entry Structure
 struct ExpenseEntry: Identifiable {
     let id = UUID()
@@ -23,6 +24,7 @@ struct ExpenseEntry: Identifiable {
 }
 
 // Pie Slice View
+// Created by pelin
 struct PieSliceView: View {
     var startAngle: Angle
     var endAngle: Angle
@@ -44,6 +46,7 @@ struct PieSliceView: View {
     }
 }
 
+// Created by pelin
 // Pie Chart View
 struct PieChartView: View {
     @Binding var showSettings: Bool
@@ -79,6 +82,7 @@ struct PieChartView: View {
     }
 }
 
+// Created and edited by pelin and suparna
 // Main View
 struct ContentView: View {
     @Environment(\.colorScheme) var colorScheme
@@ -204,12 +208,16 @@ struct ContentView: View {
     }
 }
 
+// Created and edited by pelin and suparna
+// Content View Preview
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView(categories: [ExpenseCategory(name: "Food", color: .blue), ExpenseCategory(name: "Entertainment", color: .green)])
     }
 }
 
+// Created by suparna
+// Category Management View
 struct CategoryManagementView: View {
     @Binding var categories: [ExpenseCategory]
     @State private var newCategoryName: String = ""
@@ -258,6 +266,8 @@ struct CategoryManagementView: View {
     }
 }
 
+// Created by pelin
+// Edited by suparna
 // Settings View
 struct SettingsView: View {
     @Binding var isDarkMode: Bool
