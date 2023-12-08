@@ -291,7 +291,10 @@ struct ExpenseEditingView: View {
 struct CategoryManagementView: View {
     @Binding var categories: [ExpenseCategory]
     @State private var newCategoryName: String = ""
-    @State private var newCategoryColor: String = ""
+    @State private var redValue: Double = 0.5
+    @State private var greenValue: Double = 0.5
+    @State private var blueValue: Double = 0.5
+
     var addCategoryClosure: (String, Color) -> Void
 
     var body: some View {
@@ -309,12 +312,24 @@ struct CategoryManagementView: View {
 
                 Section(header: Text("Add New Category")) {
                     TextField("Name", text: $newCategoryName)
-                    TextField("Color", text: $newCategoryColor)
+                    HStack {
+                        Text("Red")
+                        Slider(value: $redValue, in: 0...1, step: 0.01)
+                    }
+                    HStack {
+                        Text("Green")
+                        Slider(value: $greenValue, in: 0...1, step: 0.01)
+                    }
+                    HStack {
+                        Text("Blue")
+                        Slider(value: $blueValue, in: 0...1, step: 0.01)
+                    }
+                    Text("Color Preview")
+                        .foregroundColor(Color(red: redValue, green: greenValue, blue: blueValue))
                     Button("Add Category") {
-                        let colorName = Color.fromString(newCategoryColor)
-                        addCategoryClosure(newCategoryName, colorName)
+                        let newColor = Color(red: redValue, green: greenValue, blue: blueValue)
+                        addCategoryClosure(newCategoryName, newColor)
                         newCategoryName = ""
-                        newCategoryColor = ""
                     }
                 }
             }
@@ -325,6 +340,7 @@ struct CategoryManagementView: View {
         categories.remove(atOffsets: offsets)
     }
 }
+
 
 extension Color {
     static func fromString(_ name: String) -> Color {
